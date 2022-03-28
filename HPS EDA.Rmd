@@ -1,0 +1,62 @@
+---
+title: "HPS Variables"
+author: "Alfonso Rojas-Alvarez"
+date: "3/28/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+hps <- read.csv("/Users/alfonso/Downloads/HPS_Week29_PUF_CSV/pulse2021_puf_29.csv")
+
+### Keep the variables:
+
+hps_c <- hps %>% select(TBIRTH_YEAR, EGENDER, RHISPANIC, RRACE, 
+                        EEDUC, MS, THHLD_NUMPER, THHLD_NUMKID, THHLD_NUMADLT, 
+                        HADCOVID, WRKLOSSRV, EXPCTLOSS, ANYWORK, 
+                        KINDWORK, TW_YN, TW_COV, WKVOL, SETTING, ANXIOUS,
+                        WORRY, INTEREST, DOWN, PRESCRIPT, MH_SVCS, MH_NOTGET, 
+                        TENURE, LIVQTRRV, EVICT, TNUM_PS, PSCHNG1, PSCHNG2,
+                        PSCHNG3, PSCHNG4, PSCHNG5, PSCHNG6, 
+                        PSWHYCHG1, PSWHYCHG2,
+                        PSWHYCHG3, PSWHYCHG4, PSWHYCHG5, PSWHYCHG6, 
+                        PSWHYCHG7, PSWHYCHG8, PSWHYCHG9, EST_ST, EST_MSA, 
+                        REGION)
+```
+
+### Create the functions to print table and plot
+```{r warning=FALSE}
+issue5_tab <- function(data, col) {
+  col <- enquo(col)
+  data %>% 
+    group_by(!!col) %>%
+    summarise(count = n())
+}
+
+issue5_hist <- function(data, col) {
+  col <- enquo(col)
+ data %>% 
+  ggplot(aes(x = !!col, fill = !!col)) + 
+  geom_histogram(stat = "count") +
+  labs(title = paste(colnames(hps_c[i]), "distribution in HPS Survey"), x = paste(colnames(hps_c[i])))
+}
+```
+
+### Loop to run the functions over all the columns
+
+I am also asking it to print the variable name just to make the file more readable.
+
+```{r warning=FALSE, paged.print=FALSE}
+z <- ncol(hps_c)
+for(i in 1:z) {   
+print(colnames(hps_c)[i])
+print(issue5_tab(hps_c, hps_c[, i]))
+print(issue5_hist(hps_c, hps_c[, i]))
+}
+```
+
+
+
+
