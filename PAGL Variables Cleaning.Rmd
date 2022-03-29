@@ -24,7 +24,7 @@ data_eng <- read.csv(file, header = TRUE) %>%
   slice(-c(1, 2)) %>%
   # Select variables
   select(Progress, ResponseId, Q2, Q38:Q39, Q48:Q49_8_TEXT, Q41, Q85_1:Q85_3, Q35:Q37, Q46,
-        Q28_1:Q28_18, Q92, Q29_1:Q29_6, Q42, Q28_19, Q4_12_TEXT, Q4_13_TEXT) %>%
+        Q28_1:Q28_18, Q92, Q29_1:Q29_6, Q42, Q28_19, Q4_12_TEXT, Q4_13_TEXT, Q32) %>%
   # Get rid of the test rows
   filter(Q4_12_TEXT != "MELANIE TEST" & Q4_12_TEXT != "MELANIETEST" & Q4_12_TEXT != "MELANIIETEST" &
            Q49_8_TEXT != "MELANIETEST" & Q49_8_TEXT != "MELANIE TEST") %>%
@@ -38,7 +38,7 @@ data_span <- read.csv(file2, header = TRUE) %>%
   slice(-c(1, 2)) %>%
   # Select variables
   select(Progress, ResponseId, Q2, Q38:Q39, Q41, Q85, Q35:Q37, Q46, Q28_1:Q28_18, Q92,
-         Q29_1:Q29_6, Q42, Q28_19)
+         Q29_1:Q29_6, Q42, Q28_19, Q32)
 ```
 
 ## Naming the Variables
@@ -261,17 +261,19 @@ print(str(df$age))
 ```{r gender}
 df$gender <- as.factor(df$gender)
 
-df$gender <- recode(df$gender, `Other (please specify):` = "Other")
+df$female <- recode(df$gender, Female = 1, Male = 0)
+
+df <- df %>%
+  select(-gender)
   
-table(df$gender)
+table(df$female)
 
 df %>%
-  select(gender) %>%
-  filter(gender != -99, gender != "") %>%
-  ggplot(aes(x = gender, fill = gender)) + geom_bar(stat = "count") +
+  select(female) %>%
+  ggplot(aes(x = female, fill = female)) + geom_bar(stat = "count") +
   labs(title = "Respondent Genders")
 
-print(str(df$gender))
+print(str(df$female))
 ```
 
 ### Academic Year
@@ -289,20 +291,29 @@ df %>%
 print(str(df$year))
 ```
 
-### Who they live with (NEED HELP)
+### Whether they live alone
 ```{r lives_with}
-## I DON'T KNOW HOW TO DEAL WITH THIS VARIABLE
+# Remove lives_family and lives_roommates from data set (no longer needed)
+df %>%
+  select(-lives_family, -lives_roommates)
+
+df$lives_alone <- as.factor(df$lives_alone)
+
+df$lives_alone <- recode(df$lives_alone, Alone = 1, `-99` = 0)
+
+table(df$lives_alone)
 ```
 
 ### Whether Respondent Had COVID-19
 ```{r had-covid}
 df$had_covid <- as.factor(df$had_covid)
 
+df$had_covid <- recode(df$had_covid, Yes = 1, No = 0)
+
 table(df$had_covid)
 
 df %>%
   select(had_covid) %>%
-  filter(had_covid != -99, had_covid != "") %>%
   ggplot(aes(x = had_covid, fill = had_covid)) + geom_bar(stat = "count") +
   labs(title = "Did Respondent Have COVID-19?")
 
@@ -344,15 +355,16 @@ print(str(df$move_pandemic))
 ```{r is_employed}
 df$is_employed <- as.factor(df$is_employed)
 
-table(df$is_employed)
+df$employed <- recode(df$is_employed, Yes = 1, No = 0)
+
+table(df$employed)
 
 df %>%
-  select(is_employed) %>%
-  filter(is_employed != -99, is_employed != "") %>%
-  ggplot(aes(x = is_employed, fill = is_employed)) + geom_bar(stat = "count") +
+  select(employed) %>%
+  ggplot(aes(x = employed, fill = employed)) + geom_bar(stat = "count") +
   labs(title = "Is Respondent Employed?")
 
-print(str(df$is_employed))
+print(str(df$employed))
 ```
 
 ### Mean PAS Score
@@ -369,14 +381,16 @@ df <- df %>%
   # Create aggregate value of mean PAS score for each respondent (there are 18 items in the scale)
   mutate(PAS_mean = PAS_sum / 18) %>%
   # Remove extraneous 0s (exist due to Qualtrics' classification of another type of NA)
-  filter(PAS_mean != 0)
+  filter(PAS_mean != 0) %>%
+  # Create new anxious variable to match with HPS
+  mutate(anxious = PAS_mean * .8)
 
-table(df$PAS_mean)
+table(df$anxious)
 
 df %>%
-  select(PAS_mean) %>%
-  ggplot(aes(x = PAS_mean)) + geom_histogram(binwidth = .2, fill = I("blue"),alpha= I(.5)) +
-  labs(title = "Distribution of Mean PAS Scores")
+  select(anxious) %>%
+  ggplot(aes(x = anxious)) + geom_histogram(binwidth = .2, fill = I("blue"),alpha= I(.5)) +
+  labs(title = "Distribution of Anxiety Scores (Derived from PAS)")
 ```
 
 ### Financial Stress
@@ -439,14 +453,15 @@ str(df$resources_counseling_noninst)
 ## medication
 df$resources_medication <- as.factor(df$resources_medication)
 
+df$prescription <- recode(df$resources_medication, Yes = 1, No = 0)
+
 df %>%
-  select(resources_medication) %>%
-  filter(resources_medication != -99, resources_medication != "") %>%
-  ggplot(aes(x = resources_medication, fill = resources_medication)) + 
+  select(prescription) %>%
+  ggplot(aes(x = prescription, fill = prescription)) + 
   geom_bar(stat = "count") +
   labs(title = "Received Psychiatric Medication Treatment")
 
-str(df$resources_medication)
+str(df$prescription)
 ```
 
 
@@ -496,19 +511,20 @@ str(df$resources_informal)
 ```{r ethnicity}
 df$hispanic <- as.factor(df$hispanic)
 
+df$hispanic <- recode(df$hispanic, Yes = 1, No = 0)
+
 table(df$hispanic)
 
 df %>%
   select(hispanic) %>%
-  filter(hispanic != -99, hispanic != "") %>%
   ggplot(aes(x = hispanic, fill = hispanic)) + 
   geom_bar(stat = "count") +
-  labs(title = "Ethnicity (UT Students Only")
+  labs(title = "Ethnicity (UT Students Only)")
 
 str(df$hispanic)
 ```
 
-### Race (NEED HELP)
+### Race
 ```{r}
 df <- df %>%
   mutate(race_c = factor(race_asian)) %>%
@@ -520,14 +536,14 @@ df <- df %>%
   
 
 df <- df %>%
-  mutate(race_comb = ifelse(race_c == "Asian", 3, 0)) %>%
-  mutate(race_comb = ifelse(race_w == "White", 1, race_comb)) %>%
-  mutate(race_comb = ifelse(race_am == "American Indian or Alaska Native", 4, race_comb)) %>%
-  mutate(race_comb = ifelse(race_b == "Black or African American", 2, race_comb)) %>%
-  mutate(race_comb = ifelse(race_h == "Native Hawaiian or Pacific Islander", 4, race_comb)) %>%
-  mutate(race_comb = ifelse(race_o == "Other", 4, race_comb))
+  mutate(race = ifelse(race_c == "Asian", 3, 0)) %>%
+  mutate(race = ifelse(race_w == "White", 1, race)) %>%
+  mutate(race = ifelse(race_am == "American Indian or Alaska Native", 4, race)) %>%
+  mutate(race = ifelse(race_b == "Black or African American", 2, race)) %>%
+  mutate(race = ifelse(race_h == "Native Hawaiian or Pacific Islander", 4, race)) %>%
+  mutate(race = ifelse(race_o == "Other", 4, race))
 
-hist(df$race_comb)
+hist(df$race)
 
 ```
 
@@ -536,5 +552,67 @@ table(df$lives_alone)
 
 df <- df %>%
   mutate(alone = ifelse(lives_alone == "Alone", 1, 0))
+```
 
+```{r education}
+# Create new education variable
+df <- df %>%
+  mutate(educ = 4)
+```
+
+```{r region}
+# Create region variable to match with HPS
+df <- df %>%
+  mutate(region = ifelse(university == "UT Austin", 5, 6)) # 5 = Texas, 6 = Mexico
+```
+
+```{r covid-network}
+df$Q32 <- as.factor(df$Q32)
+
+df$network_covid <- recode(df$Q32, Yes = 1, No = 0, `SÃ­` = 1)
+
+df %>%
+  select(network_covid) %>%
+  ggplot(aes(x = network_covid, fill = network_covid)) + 
+  geom_bar(stat = "count") +
+  labs(title = "Did someone in network have COVID?")
+
+df <- df %>%
+  select(-Q32)
+```
+
+
+```{r make_ids}
+df <- df %>%
+  group_by(university) %>%
+  mutate(un = ifelse(university == "UT Austin", "UT", 
+                     ifelse(university == "ITAM", "ITAM", "UNAM"))) %>%
+  mutate(un_id = row_number(un)) %>%
+  mutate(id = paste0(un,"_",un_id))
+```
+
+```{r remove}
+# Remove unneeded Variables
+df <- df %>%
+  ungroup() %>%
+  select(-progress, -responseID, -year, -lives_roommates, -lives_family, -covid_symp,
+         -move_pandemic, -is_employed, -PAS_teachers_critical, -PAS_teachers_unrealistic,
+         -PAS_time, -PAS_excessive_workload, -PAS_amount_too_much, -PAS_behind, -PAS_relax,
+         -PAS_exams_difficult, -PAS_exams_time, -PAS_exams_stressful, - PAS_weakness,
+         -PAS_job, -PAS_confident_career, -PAS_confident_student, -PAS_decisions_easy,
+         -PAS_fear_failing, -PAS_intense_competition, -resources_counseling_inst,
+         -PAS_parents_unrealistic,
+         -resources_medication, -resources_informal, -resources_counseling_noninst,
+         -resources_wellness_noninst, -resources_wellness_inst, -living_situation, -race_amind,
+         -race_asian, -race_white, -race_other, -race_black, -race_haw, -race_other_text, 
+         -PAS_sum, -PAS_mean, -race_c, -race_am, -race_h, -race_b, -race_w, -race_o,
+         -un, -un_id, -university)
+
+head(df)
+```
+
+
+```{r csv}
+# Write to a csv
+write.csv(df, "C:/Users/Melanie/Documents/UT Austin/PAGL/SLAS/pagl.csv")
 ```
