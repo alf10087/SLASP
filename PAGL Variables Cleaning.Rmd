@@ -592,7 +592,7 @@ df <- df %>%
 ```
 
 ```{r}
-# Make State
+# Make States
 df <- df %>%
   mutate(state = ifelse(university == "UT Austin", 48, 99))
 ```
