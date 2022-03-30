@@ -591,6 +591,12 @@ df <- df %>%
   mutate(id = paste0(un,"_",un_id))
 ```
 
+```{r}
+# Make State
+df <- df %>%
+  mutate(state = ifelse(university == "UT Austin", 48, 99))
+```
+
 ```{r remove}
 # Remove unneeded Variables
 df <- df %>%
@@ -610,6 +616,7 @@ df <- df %>%
 
 head(df)
 ```
+
 
 
 ```{r csv}
