@@ -2,7 +2,7 @@
 
 library(dplyr)
 library(ggplot2)
-hps <- read.csv("/Users/alfonso/Downloads/HPS_Week29_PUF_CSV/pulse2021_puf_29.csv")
+hps <- read.csv("C:/Users/Melanie/Documents/UT Austin/PAGL/SLAS/SLASP/pulse2021_puf_29.csv")
 
 ### Keep the variables:
 
@@ -31,6 +31,12 @@ hps_c <- hps_c %>%
   mutate(employed = ifelse(employed == 2, 0, employed)) %>%
   mutate(id = row_number()) %>%
   mutate(source = "HPS") %>%
+  mutate(prescription = ifelse(prescription == 2, 0, prescription)) %>%
   mutate(id = paste(source, id, sep = "_")) %>%
   select(-source) %>%
   rename(state = EST_ST)
+
+
+write.csv(hps_c, "hps_clean.csv")
+
+table(hps$prescription)

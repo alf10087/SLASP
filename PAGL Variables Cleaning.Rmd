@@ -621,5 +621,6 @@ head(df)
 
 ```{r csv}
 # Write to a csv
-write.csv(df, "C:/Users/Melanie/Documents/UT Austin/PAGL/SLAS/pagl.csv")
+
+write.csv(df, "C:/Users/Melanie/Documents/UT Austin/PAGL/SLAS/SLASP/pagl.csv")
 ```
