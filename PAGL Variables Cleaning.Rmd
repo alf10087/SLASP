@@ -597,6 +597,36 @@ df <- df %>%
   mutate(state = ifelse(university == "UT Austin", 48, 99))
 ```
 
+```{r}
+# Make mental health (get or didn't get) variable
+df <- df %>%
+  mutate(mh_ci = factor(resources_counseling_inst)) %>%
+  mutate(mh_m = factor(resources_medication)) %>%
+  mutate(mh_wi = factor(resources_wellness_inst)) %>%
+  mutate(mh_cn = factor(resources_counseling_noninst)) %>%
+  mutate(mh_wn = factor(resources_wellness_noninst)) %>%
+  mutate(mh_i = factor(resources_informal))
+
+df <- df %>%
+  mutate(mh_services = ifelse(mh_ci == "Yes", 1, 0)) %>%
+  mutate(mh_services = ifelse(mh_m == "Yes", 1, mh_services)) %>%
+  mutate(mh_services = ifelse(mh_wi == "Yes", 1, mh_services)) %>%
+  mutate(mh_services = ifelse(mh_cn == "Yes", 1, mh_services)) %>%
+  mutate(mh_services = ifelse(mh_wn == "Yes", 1, mh_services)) %>%
+  mutate(mh_services = ifelse(mh_i == "Yes", 1, mh_services))
+
+df <- df %>%
+  select(-mh_ci, -mh_m, -mh_wi, -mh_cn, -mh_wn, -mh_i)
+
+```
+
+```{r}
+# Add EST_MSA variable
+df <- df %>%
+  mutate(EST_MSA = ifelse(university == "UT Austin", "XXX", "YYY"))
+
+```
+
 ```{r remove}
 # Remove unneeded Variables
 df <- df %>%
