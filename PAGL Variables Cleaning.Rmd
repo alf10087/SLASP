@@ -621,7 +621,7 @@ df <- df %>%
 ```
 
 ```{r}
-# Add EST_MSA variable to PAGL
+# Add EST_MSA variable
 df <- df %>%
   mutate(EST_MSA = ifelse(university == "UT Austin", "XXX", "YYY"))
 
