@@ -608,12 +608,12 @@ df <- df %>%
   mutate(mh_i = factor(resources_informal))
 
 df <- df %>%
-  mutate(mh_services = ifelse(mh_ci == "Yes", 1, 0)) %>%
-  mutate(mh_services = ifelse(mh_m == "Yes", 1, mh_services)) %>%
-  mutate(mh_services = ifelse(mh_wi == "Yes", 1, mh_services)) %>%
-  mutate(mh_services = ifelse(mh_cn == "Yes", 1, mh_services)) %>%
-  mutate(mh_services = ifelse(mh_wn == "Yes", 1, mh_services)) %>%
-  mutate(mh_services = ifelse(mh_i == "Yes", 1, mh_services))
+  mutate(MH_SVCS = ifelse(mh_ci == "Yes", 1, 0)) %>%
+  mutate(MH_SVCS = ifelse(mh_m == "Yes", 1, MH_SVCS)) %>%
+  mutate(MH_SVCS = ifelse(mh_wi == "Yes", 1, MH_SVCS)) %>%
+  mutate(MH_SVCS = ifelse(mh_cn == "Yes", 1, MH_SVCS)) %>%
+  mutate(MH_SVCS = ifelse(mh_wn == "Yes", 1, MH_SVCS)) %>%
+  mutate(MH_SVCS = ifelse(mh_i == "Yes", 1, MH_SVCS))
 
 df <- df %>%
   select(-mh_ci, -mh_m, -mh_wi, -mh_cn, -mh_wn, -mh_i)
@@ -641,7 +641,7 @@ df <- df %>%
          -resources_medication, -resources_informal, -resources_counseling_noninst,
          -resources_wellness_noninst, -resources_wellness_inst, -living_situation, -race_amind,
          -race_asian, -race_white, -race_other, -race_black, -race_haw, -race_other_text, 
-         -PAS_sum, -PAS_mean, -race_c, -race_am, -race_h, -race_b, -race_w, -race_o,
+         -PAS_sum, -race_c, -race_am, -race_h, -race_b, -race_w, -race_o,
          -un, -un_id, -university)
 
 head(df)
