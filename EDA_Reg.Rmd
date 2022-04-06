@@ -1,0 +1,146 @@
+---
+title: "EDA Alfonso"
+author: "Alfonso Rojas-Alvarez"
+date: "4/6/2022"
+output: html_document
+---
+
+
+```{r cars}
+### EDA and modeling
+library(ggplot2)
+library(dplyr)
+library(fixest)
+comp <- read.csv("full.csv")
+```
+
+Lives Alone is widely varying between groups
+
+```{r}
+table(comp$lives_alone, comp$group)
+```
+
+Let's check now only undergrads. 
+
+```{r}
+col_samp <- comp %>%
+  filter(educ == 4)
+table(col_samp$lives_alone, col_samp$group)
+
+col_samp %>% filter(group == "National") %>%
+  summarize(mean(lives_alone, na.rm= TRUE))
+
+col_samp %>% filter(group == "PAGL") %>%
+  summarize(mean(lives_alone, na.rm= TRUE))
+t.test(col_samp$lives_alone, as.numeric(col_samp$group), na.rm = TRUE)
+```
+Interesting, so, the general college populaton lives alone more than just the UT/Mexico sample. This might be a matter of age. There aren't many old UT students while there should be a lot in the general population. Let's explore this:
+
+```{r}
+col_samp %>% 
+  ggplot(aes(x=age, colour=group)) + geom_density() +
+  labs(x = "Age", y = "Proportion", 
+       title = "Age by Sample Group", fill = "group", subtitle= "PAGL, HPS 2021", 
+       caption = "PAGL, University of Texas, 2021") +
+  labs(color='Group') + theme(legend.position = c(0.8, 0.8)) + theme_bw()
+```
+
+Yeah, as expected.
+
+Let's now look at anxiety levels.
+
+```{r}
+
+col_samp %>% 
+  filter(group == "National") %>%
+  filter(anxious > -0.1) %>%
+  summarize(mean(anxious, na.rm= TRUE))
+
+col_samp %>% filter(group == "PAGL") %>%
+  filter(anxious > -0.1) %>%
+  summarize(mean(anxious, na.rm= TRUE))
+
+for_t <- col_samp %>%
+  filter(anxious > -0.1)
+
+t.test(for_t$anxious, as.numeric(for_t$group), na.rm = TRUE)
+```
+
+```{r}
+col_samp %>% 
+  filter(anxious > -0.1) %>%
+  ggplot(aes(x=anxious, colour=group)) + geom_density() +
+  labs(x = "Anxiety", y = "Proportion", 
+       title = "Anxiety by Sample Group", fill = "group", subtitle= "PAGL, HPS 2021", 
+       caption = "PAGL, University of Texas, 2021") +
+  labs(color='Group') + theme(legend.position = c(0.8, 0.8)) + theme_bw()
+```
+
+```{r}
+col_samp %>% 
+  group_by(group) %>%
+  filter(anxious > -0.1) %>%
+  filter(had_covid > -0.1) %>%
+  filter(employed > -0.1) %>%
+  filter(prescription > -0.1) %>%
+  filter(prescription > -0.1) %>%
+  summarize(anxiety = mean(anxious, na.rm = TRUE), female = mean(female, na.rm = TRUE), hispanic = mean(hispanic, na.rm = TRUE), covid = mean(had_covid, na.rm = TRUE), employment = mean(employed, na.rm = TRUE), prescription = mean(prescription, na.rm = TRUE), age = mean(age, na.rm = TRUE))
+```
+
+Okay, the difference between groups looks pretty straightforward. Let's have some fun with regressions.
+
+First let's select the regression sample, it has to be the one where no on has a missing:
+
+```{r}
+reg_samp <- col_samp %>% 
+  select(anxious, group, had_covid, employed, prescription, age, female, hispanic, state) %>%
+  filter(anxious > -0.1) %>%
+  filter(had_covid > -0.1) %>%
+  filter(employed > -0.1) %>%
+  filter(prescription > -0.1)
+
+reg_samp_comp <- comp %>% 
+  select(anxious, educ, group, had_covid, employed, prescription, age, female, hispanic, state) %>%
+  filter(anxious > -0.1) %>%
+  filter(had_covid > -0.1) %>%
+  filter(employed > -0.1) %>%
+  filter(prescription > -0.1)
+```
+
+```{r}
+reg_samp %>% 
+  filter(group == "National") %>%
+  filter(anxious > -0.1) %>%
+  summarize(mean(anxious, na.rm= TRUE), n())
+
+reg_samp %>% filter(group == "PAGL") %>%
+  filter(anxious > -0.1) %>%
+  summarize(mean(anxious, na.rm= TRUE), n())
+
+basic_col<- feglm(anxious ~ group + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + factor(prescription) + age, data = reg_samp)
+
+summary(basic_model)
+```
+
+```{r}
+comp %>% 
+  filter(group == "National") %>%
+  filter(anxious > -0.1) %>%
+  summarize(mean(anxious, na.rm= TRUE), n())
+
+comp %>% filter(group == "PAGL") %>%
+  filter(anxious > -0.1) %>%
+  summarize(mean(anxious, na.rm= TRUE), n())
+
+basic_full <- feglm(anxious ~ group + factor(educ) + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + factor(prescription) + age, data = comp)
+
+### Add state fixed effects
+
+fe_full<- feglm(anxious ~ group + factor(educ) + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + factor(prescription) + age | state, data = comp)
+
+fe_col <- feglm(anxious ~ group + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + factor(prescription) + age | state, data = reg_samp)
+```
+
+```{r paged.print=FALSE}
+etable(basic_col, basic_full, fe_col, fe_full)
+```

@@ -38,5 +38,3 @@ hps_c <- hps_c %>%
 
 
 write.csv(hps_c, "hps_clean.csv")
-
-table(hps$prescription)

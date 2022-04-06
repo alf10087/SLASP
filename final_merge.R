@@ -11,10 +11,12 @@ pagl <- read.csv("pagl.csv")
 # Remove X primary key from HPS and PAGL
 hps <- hps %>%
   select(-X) %>%
-  rename(lives_alone = alone)
+  rename(lives_alone = alone) %>%
+  mutate(group = "National")
 
 pagl <- pagl %>%
-  select(-X)
+  select(-X) %>%
+  mutate(group = "PAGL")
 
 # Merge PAGL and HPS
 full <- merge(hps, pagl, all = TRUE)
@@ -32,4 +34,4 @@ for (i in 1:z) {
 full <- full %>%
   mutate(mhealth_ind = anxious + WORRY + INTEREST + DOWN)
 
-
+write.csv(full, "full.csv")
