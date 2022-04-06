@@ -2,7 +2,7 @@
 
 library(dplyr)
 library(ggplot2)
-hps <- read.csv("C:/Users/Melanie/Documents/UT Austin/PAGL/SLAS/SLASP/pulse2021_puf_29.csv")
+hps <- read.csv("pulse2021_puf_29.csv")
 
 ### Keep the variables:
 
