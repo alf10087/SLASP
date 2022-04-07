@@ -11,6 +11,7 @@ output: html_document
 library(ggplot2)
 library(dplyr)
 library(fixest)
+library(factoextra)
 comp <- read.csv("full.csv")
 ```
 
@@ -118,27 +119,50 @@ reg_samp %>% filter(group == "PAGL") %>%
   summarize(mean(anxious, na.rm= TRUE), n())
 
 basic_col<- feglm(anxious ~ group + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + factor(prescription) + age, data = reg_samp)
-
-summary(basic_model)
 ```
 
 ```{r}
 comp %>% 
   filter(group == "National") %>%
   filter(anxious > -0.1) %>%
+  filter(prescription > -0.1) %>%
   summarize(mean(anxious, na.rm= TRUE), n())
 
 comp %>% filter(group == "PAGL") %>%
+  filter(prescription > -0.1) %>%
   filter(anxious > -0.1) %>%
   summarize(mean(anxious, na.rm= TRUE), n())
 
-basic_full <- feglm(anxious ~ group + factor(educ) + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + factor(prescription) + age, data = comp)
+basic_full <- feglm(anxious ~ group + factor(educ) + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + factor(prescription) + age, data = reg_samp_comp)
 
 ### Add state fixed effects
 
-fe_full<- feglm(anxious ~ group + factor(educ) + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + factor(prescription) + age | state, data = comp)
+fe_full<- feglm(anxious ~ group + factor(educ) + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + factor(prescription) + age | state, data = reg_samp_comp)
 
 fe_col <- feglm(anxious ~ group + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + factor(prescription) + age | state, data = reg_samp)
+```
+
+### Let's do some segmentation to see if something interesting comes out of it.
+
+```{r echo=TRUE}
+segmenting <- reg_samp %>% 
+  select(-state, -anxious, -group) %>% 
+  ungroup()
+        
+segmenting <- na.omit(segmenting)
+set.seed(100)
+km <- kmeans(segmenting,  centers = 4, nstart = 1)
+fviz_cluster(km, data = segmenting, geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw()) + 
+               scale_fill_discrete(name="Groups",
+                                  breaks=c("1", "2", "3", "4"),
+                                   labels=c("A", "B", "C", "D")) + 
+  scale_colour_discrete(guide = "none") +
+  scale_shape_discrete(guide = "none") + 
+  labs(title="K-means segmentation of sample",
+                              subtitle= "PAGL and HPS, 2022")
+data.frame(km$centers)
 ```
 
 ```{r paged.print=FALSE}
