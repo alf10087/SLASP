@@ -118,7 +118,7 @@ reg_samp %>% filter(group == "PAGL") %>%
   filter(anxious > -0.1) %>%
   summarize(mean(anxious, na.rm= TRUE), n())
 
-basic_col<- feglm(anxious ~ group + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + factor(prescription) + age, data = reg_samp)
+
 ```
 
 ```{r}
@@ -133,18 +133,27 @@ comp %>% filter(group == "PAGL") %>%
   filter(anxious > -0.1) %>%
   summarize(mean(anxious, na.rm= TRUE), n())
 
-basic_full <- feglm(anxious ~ group + factor(educ) + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + factor(prescription) + age, data = reg_samp_comp)
 
-### Add state fixed effects
+### Anxiety
+basicanx_col<- feglm(anxious ~ group + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + factor(prescription) + age, data = reg_samp)
+anx_full <- feglm(anxious ~ group + factor(educ) + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + factor(prescription) + age, data = reg_samp_comp)
+####### Add state fixed effects
+anxfe_full<- feglm(anxious ~ group + factor(educ) + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + factor(prescription) + age | state, data = reg_samp_comp)
+anxfe_col <- feglm(anxious ~ group + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + factor(prescription) + age | state, data = reg_samp)
 
-fe_full<- feglm(anxious ~ group + factor(educ) + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + factor(prescription) + age | state, data = reg_samp_comp)
+### Prescription
+presc_col<- feglm(prescription ~ group + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + age, data = reg_samp, family = "binomial")
+presc_full <- feglm(prescription ~ group + factor(educ) + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + age, data = reg_samp_comp, family = "binomial")
+####### Add state fixed effects
+prescanxfe_full<- feglm(prescription ~ group + factor(educ) + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + age | state, data = reg_samp_comp, family = "binomial")
+prescanxfe_col <- feglm(prescription ~ group + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + age | state, data = reg_samp, family = "binomial")
 
-fe_col <- feglm(anxious ~ group + factor(female) + factor(hispanic) + factor(had_covid) + factor(employed) + factor(prescription) + age | state, data = reg_samp)
+b <- etable(presc_col, presc_full, prescanxfe_full, prescanxfe_col)
 ```
 
 ### Let's do some segmentation to see if something interesting comes out of it.
 
-```{r echo=TRUE}
+```{r eval=FALSE, include=FALSE}
 segmenting <- reg_samp %>% 
   select(-state, -anxious, -group) %>% 
   ungroup()
@@ -166,5 +175,5 @@ data.frame(km$centers)
 ```
 
 ```{r paged.print=FALSE}
-etable(basic_col, basic_full, fe_col, fe_full)
+a <- etable(basic_col, basic_full, fe_col, fe_full)
 ```
